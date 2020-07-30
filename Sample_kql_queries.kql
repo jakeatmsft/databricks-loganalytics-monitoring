@@ -1,0 +1,51 @@
+// Cluster CPU usage Calculate CPU usage patterns over the last day, chart by percentiles. 
+Perf
+| where CounterName == "% Processor Time"
+| where ObjectName == "Processor"
+| where TimeGenerated > ago(48h)
+| extend  clusterid = substring(Computer,0, indexof(Computer,"-", 0, string_size(Computer),3))
+| join kind= leftouter (
+    DatabricksClusters 
+    | extend clusterid = extractjson("$['clusterId']",RequestParams)
+    | extend clustername = extractjson("$['clusterName']",RequestParams)
+    | where TimeGenerated > ago(7d)
+    | summarize any(ResourceId) by clusterid, clustername
+    | where clusterid != ""
+) on clusterid
+| summarize avg(CounterValue) by  clustername, bin(TimeGenerated, 15min) // bin is used to set the time grain to 15 minutes
+
+
+
+// Cluster available Memory
+Perf
+| where TimeGenerated > ago(48h)
+| where ObjectName == "Memory" and
+(CounterName == "Available MBytes Memory" or // the name used in Linux records
+CounterName == "Available MBytes") // the name used in Windows records
+| extend  clusterid = substring(Computer,0, indexof(Computer,"-", 0, string_size(Computer),3))
+| join kind= leftouter (
+    DatabricksClusters 
+    | extend clusterid = extractjson("$['clusterId']",RequestParams)
+    | extend clustername = extractjson("$['clusterName']",RequestParams)
+    | where TimeGenerated > ago(7d)
+    | summarize any(ResourceId) by clusterid, clustername
+    | where clusterid != ""
+) on clusterid
+| summarize availableMem=avg(CounterValue) by clustername, bin(TimeGenerated, 15min) // bin is used to set the time grain to 15 minutes
+| render timechart
+
+//Count of cluster nodes
+Heartbeat
+| where TimeGenerated > ago(48h)
+| extend  clusterid = substring(Computer,0, indexof(Computer,"-", 0, string_size(Computer),3))
+| join kind= leftouter (
+    DatabricksClusters 
+    | extend clusterid = extractjson("$['clusterId']",RequestParams)
+    | extend clustername = extractjson("$['clusterName']",RequestParams)
+    | where TimeGenerated > ago(7d)
+    | summarize any(ResourceId) by clusterid, clustername
+    | where clusterid != ""
+) on clusterid
+| summarize dcount(Computer) by clustername, bin(TimeGenerated, 15min) // bin is used to set the time grain to 15 minutes
+| render timechart
+
