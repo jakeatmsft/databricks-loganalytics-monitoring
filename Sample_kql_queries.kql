@@ -6,7 +6,7 @@ Heartbeat
     DatabricksClusters 
     | extend clusterid = extractjson("$['clusterId']",RequestParams)
     | extend clustername = extractjson("$['clusterName']",RequestParams)
-    | where TimeGenerated > ago(7d)
+    | where TimeGenerated > ago(30d)
     | summarize any(ResourceId) by clusterid, clustername
     | where clusterid != ""
 ) on clusterid
@@ -16,7 +16,7 @@ Heartbeat
 
 // Cluster available Memory
 Perf
-| where TimeGenerated > ago(48d)
+| where TimeGenerated > ago(48h)
 | where ObjectName == "Memory" and
 (CounterName == "Available MBytes Memory" or // the name used in Linux records
 CounterName == "Available MBytes") // the name used in Windows records
@@ -25,7 +25,7 @@ CounterName == "Available MBytes") // the name used in Windows records
     DatabricksClusters 
     | extend clusterid = extractjson("$['clusterId']",RequestParams)
     | extend clustername = extractjson("$['clusterName']",RequestParams)
-    | where TimeGenerated > ago(7d)
+    | where TimeGenerated > ago(30d)
     | summarize any(ResourceId) by clusterid, clustername
     | where clusterid != ""
 ) on clusterid
@@ -34,7 +34,7 @@ CounterName == "Available MBytes") // the name used in Windows records
 
 // Cluster % used Memory
 Perf
-| where TimeGenerated > ago(48d)
+| where TimeGenerated > ago(48h)
 | where ObjectName == "Memory" and
 (CounterName == "% Used Memory") // the name used in Windows records
 | extend  clusterid = substring(Computer,0, indexof(Computer,"-", 0, string_size(Computer),3))
@@ -42,7 +42,7 @@ Perf
     DatabricksClusters 
     | extend clusterid = extractjson("$['clusterId']",RequestParams)
     | extend clustername = extractjson("$['clusterName']",RequestParams)
-    | where TimeGenerated > ago(7d)
+    | where TimeGenerated > ago(30d)
     | summarize any(ResourceId) by clusterid, clustername
     | where clusterid != ""
 ) on clusterid
@@ -57,7 +57,7 @@ Heartbeat
     DatabricksClusters 
     | extend clusterid = extractjson("$['clusterId']",RequestParams)
     | extend clustername = extractjson("$['clusterName']",RequestParams)
-    | where TimeGenerated > ago(7d)
+    | where TimeGenerated > ago(30d)
     | summarize any(ResourceId) by clusterid, clustername
     | where clusterid != ""
 ) on clusterid
